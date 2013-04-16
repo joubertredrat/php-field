@@ -6,19 +6,20 @@
  *
  * @author		Joubert Guimarães de Assis "RedRat" <joubert@redrat.com.br>
  * @copyright	Copyright (c) 2013, RedRat Consultoria
- * @version 	1.1
  * @license		GPL version 2
  * @see 		Github, animes and mangás, cute girls and PHP, much PHP
+ * @link 		https://github.com/joubertredrat/ci_field
+ * @todo 		In future implements a html5 attributes.
  */
 
 class Field {
-	/*
+	/**
 	 * Field type.
 	 */
 	private $type;
 
 	/**
-	 * Input attributes.
+	 * Input, textarea, select attributes.
 	 */
 	private $name;
 	private $id;
@@ -27,27 +28,28 @@ class Field {
 	private $style;
 	private $title;
 	private $required;
+	private $multiple;
 
 	/**
-	 * Select values
+	 * Select values.
 	 */
 	private $option;
 	private $multiple_option;
 
 	/**
-	 * Input events
+	 * Input events.
 	 */
 	private $onclick;
 	private $onchange;
 	private $onkeyup;
 
 	/**
-	 * Radio and Checkbox attribute
+	 * Radio and Checkbox attribute.
 	 */
 	private $checked;
 
 	/**
-	 * Label attrs and data
+	 * Label attributes and data.
 	 */
 	private $label_class;
 	private $label_id;
@@ -63,6 +65,8 @@ class Field {
 	const TYPE_RADIO = 'radio';
 	const TYPE_CHECKBOX = 'checkbox';
 	const TYPE_SELECT = 'select';
+	const TYPE_FILE = 'file';
+	const TYPE_SUBMIT = 'submit';
 
 	/**
 	 * Constants for class works.
@@ -93,6 +97,8 @@ class Field {
 		$data[] = self::TYPE_CHECKBOX;
 		$data[] = self::TYPE_RADIO;
 		$data[] = self::TYPE_SELECT;
+		$data[] = self::TYPE_FILE;
+		$data[] = self::TYPE_SUBMIT;
 		return $data;
 	}
 
@@ -128,7 +134,7 @@ class Field {
 		$name = explode('_', $name);
 		$method = $name[0];
 		if($method != self::PREFIX_CALL)
-			exit(__CLASS__ . ' said: Erm, this method needs a ' . self::PREFIX_CALL . ' before attribute, "' . self::PREFIX_CALL . '_id", "' . self::PREFIX_CALL . '_name", etc... okay? :).');
+			exit(__CLASS__ . ' said: Erm, this method needs a "' . self::PREFIX_CALL . '" before attribute, "' . self::PREFIX_CALL . '_id", "' . self::PREFIX_CALL . '_name", etc... okay? :)');
 		unset($name[0]);
 		switch($this->type) {
 			case self::TYPE_TEXT:
@@ -136,6 +142,8 @@ class Field {
 			case self::TYPE_EMAIL:
 			case self::TYPE_RADIO:
 			case self::TYPE_CHECKBOX:
+			case self::TYPE_FILE:
+			case self::TYPE_SUBMIT:
 				$name = implode('_', $name);
 				if(!property_exists(__CLASS__, $name))
 					exit(__CLASS__ . ' said: No way! wrong attribute: "' . $name . '".');	
@@ -246,12 +254,12 @@ class Field {
 	}
 
 	/**
-	 * Generates a html with input type text.
+	 * Generates a general html for most inputs.
 	 * @return string Return a html generated.
 	 */
-	private function get_text() {
+	private function get_standard() {
 		$html = '';
-		if($this->label_text) {
+		if($this->label_text && $this->type != self::TYPE_SUBMIT) {
 			if($this->id)
 				$label[] = 'for="' . $this->id . '"';
 			if($this->label_id)
@@ -273,9 +281,19 @@ class Field {
 			$input[] = 'value="' . $this->value . '"';
 		if($this->title)
 			$input[] = 'title="' . $this->title . '"';
+		if($this->multiple && $this->type === self::TYPE_FILE)
+			$input[] = 'multiple="multiple"';
 		$input = array_merge($input, $this->get_html_multiple_attr());
 		$html .= '<input ' . implode(' ', $input) . ' />';
 		return $html;
+	}
+
+	/**
+	 * Generates a html with input type text.
+	 * @return string Return a html generated.
+	 */
+	private function get_text() {
+		return $this->get_standard();
 	}
 
 	/**
@@ -283,7 +301,23 @@ class Field {
 	 * @return string Return a html generated.
 	 */
 	private function get_email() {
-		return $this->get_text();
+		return $this->get_standard();
+	}
+
+	/**
+	 * Generates a html with input type file.
+	 * @return string Return a html generated.
+	 */
+	private function get_file() {
+		return $this->get_standard();
+	}
+
+	/**
+	 * Generates a html with input type submit.
+	 * @return string Return a html generated.
+	 */
+	private function get_submit() {
+		return $this->get_standard();
 	}
 
 	/**
@@ -304,7 +338,6 @@ class Field {
 			$html .= '<label ' . implode(' ', $label) . '>' . $this->label_text . ':' . ($this->required ? '*' : '') . '</label>' . (self::BREAK_LINE ? "\n" : '');
 		}
 
-		$input[] = 'type="text"';
 		$input[] = 'name="' . $this->name . '"';
 		if($this->id)
 			$input[] = 'id="' . $this->id . '"';
@@ -432,6 +465,8 @@ class Field {
 			$select[] = 'class="' . implode(' ', $this->class) . '"';
 		if($this->title)
 			$select[] = 'title="' . $this->title . '"';
+		if($this->multiple)
+			$select[] = 'multiple="multiple"';
 		$select = array_merge($select, $this->get_html_multiple_attr());
 
 		$options = array();
