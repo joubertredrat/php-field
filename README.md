@@ -1,4 +1,4 @@
-ci_field
+Field class for CodeIgniter and another apps.
 ========
 
-Himitsu
+On work.
