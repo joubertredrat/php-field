@@ -68,6 +68,7 @@ class Field {
 	const TYPE_FILE = 'file';
 	const TYPE_SUBMIT = 'submit';
 	const TYPE_PASSWORD = 'password';
+	const TYPE_BUTTON = 'button';
 
 	/**
 	 * Constants for class works.
@@ -105,6 +106,7 @@ class Field {
 		$data[] = self::TYPE_FILE;
 		$data[] = self::TYPE_SUBMIT;
 		$data[] = self::TYPE_PASSWORD;
+		$data[] = self::TYPE_BUTTON;
 		return $data;
 	}
 
@@ -177,6 +179,7 @@ class Field {
 			case self::TYPE_FILE:
 			case self::TYPE_SUBMIT:
 			case self::TYPE_PASSWORD:
+			case self::TYPE_BUTTON:
 				if(count($data) > 1 && !in_array($attr, self::get_multiple_attr()))
 					exit(__CLASS__ . ' said: Hey! "' . $attr . '" receives only one param.');
 			break;
@@ -207,6 +210,7 @@ class Field {
 			case self::TYPE_FILE:
 			case self::TYPE_SUBMIT:
 			case self::TYPE_PASSWORD:
+			case self::TYPE_BUTTON:
 				$this->$attr = in_array($attr, self::get_multiple_attr()) ? array_merge($this->$attr, $data) : $data[0];
 			break;
 			case self::TYPE_HIDDEN:
@@ -288,8 +292,12 @@ class Field {
 	 * Gets a HTML generated and print on screen.
 	 * @return void
 	 */
-	public function render() {
+	public function render($spam = false) {
+		if($spam)
+			echo '<span>' . (self::BREAK_LINE ? "\n" : '');
 		echo $this->get();
+		if($spam)
+			echo (self::BREAK_LINE ? "\n" : '') . '</span>' . (self::BREAK_LINE ? "\n" : '');
 	}
 
 	/**
@@ -362,7 +370,7 @@ class Field {
 	 * @return string Return a html generated.
 	 */
 	private function get_html_label() {
-		if(!$this->label_text && in_array($this->type, array(self::TYPE_SUBMIT, self::TYPE_HIDDEN)))
+		if(!$this->label_text && in_array($this->type, array(self::TYPE_SUBMIT, self::TYPE_HIDDEN, self::TYPE_BUTTON)))
 			return '';
 		$label = array();
 		if($this->id)
@@ -414,6 +422,14 @@ class Field {
 	 * @return string Return a html generated.
 	 */
 	private function get_submit() {
+		return $this->get_standard();
+	}
+
+	/**
+	 * Generates a html with input type submit.
+	 * @return string Return a html generated.
+	 */
+	private function get_button() {
 		return $this->get_standard();
 	}
 

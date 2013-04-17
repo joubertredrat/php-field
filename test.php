@@ -190,3 +190,16 @@ require(__DIR__ . '/field.php');
 <option value="KV-1S">KV-1S</option>
 </select>
 */
+
+	Field::newer('life_history', Field::TYPE_TEXTAREA)
+		->set_label_text('Your history guy!')
+		->set_id('form2')
+		->set_required(true)
+		->set_title('LOLOLOLOLOLOLOL')
+		->set_onclick('alert(\'more lol\')', "alert('more lol more lol and more lol')")
+		->render();
+		
+/*
+<label for="form2" title="LOLOLOLOLOLOLOL">Your history guy!:*</label>
+<textarea name="life_history" id="form2" class="required" title="LOLOLOLOLOLOLOL" onclick="alert('more lol'); alert('more lol more lol and more lol');" ></textarea>
+*/
