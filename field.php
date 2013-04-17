@@ -259,6 +259,7 @@ class Field {
 	 */
 	private function get_standard() {
 		$html = '';
+		$label = array();
 		if($this->label_text && $this->type != self::TYPE_SUBMIT) {
 			if($this->id)
 				$label[] = 'for="' . $this->id . '"';
@@ -268,7 +269,7 @@ class Field {
 				$label[] = 'class="' . implode(' ', $this->label_class) . '"';
 			if($this->title)
 				$label[] = 'title="' . $this->title . '"';
-			$html .= '<label ' . implode(' ', $label) . '>' . $this->label_text . ':' . ($this->required ? '*' : '') . '</label>' . (self::BREAK_LINE ? "\n" : '');
+			$html .= '<label' . (count($label) > 0 ? ' ' . implode(' ', $label) : '') . '>' . $this->label_text . ':' . ($this->required ? '*' : '') . '</label>' . (self::BREAK_LINE ? "\n" : '');
 		}
 
 		$input[] = 'type="' . $this->type . '"';

@@ -5,6 +5,15 @@
 
 require(__DIR__ . '/field.php');
 
+	// Simple usage
+	Field::newer('lol', Field::TYPE_TEXT)->set_label_text('is lol?')->render();
+/*
+<label>is lol?:</label>
+<input type="text" name="lol" />
+*/
+
+
+
 	Field::newer('username', Field::TYPE_TEXT)
 		->set_label_text('Your username')
 		->set_label_class('class1', 'class2')
