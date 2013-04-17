@@ -7,12 +7,11 @@ require(__DIR__ . '/field.php');
 
 	// Simple usage
 	Field::newer('lol', Field::TYPE_TEXT)->set_label_text('is lol?')->render();
+
 /*
 <label>is lol?:</label>
 <input type="text" name="lol" />
 */
-
-
 
 	Field::newer('username', Field::TYPE_TEXT)
 		->set_label_text('Your username')
@@ -48,6 +47,17 @@ require(__DIR__ . '/field.php');
 /*
 <label for="news" class="class1 class2 class3 class4 class5" title="If you join us you will receive our newsletter">Follow us:</label>
 <input type="email" name="newsletter" id="news" class="devs" title="If you join us you will receive our newsletter" style="color: #0000FF; background-color: #00FFFF;" onchange="alert(' more one lol'); alert('more one lol again');" />
+*/
+
+	Field::newer('passwordios', Field::TYPE_PASSWORD)
+		->set_label_text('You remember your password?')
+		->set_id('lepass')
+		->set_required(true)
+		->render();
+
+/*
+<label for="lepass">You remember your password?:*</label>
+<input type="password" name="passwordios" id="lepass" class="required" required />
 */
 
 	Field::newer('Donnier', Field::TYPE_FILE)

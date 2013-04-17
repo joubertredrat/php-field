@@ -67,6 +67,7 @@ class Field {
 	const TYPE_SELECT = 'select';
 	const TYPE_FILE = 'file';
 	const TYPE_SUBMIT = 'submit';
+	const TYPE_PASSWORD = 'password';
 
 	/**
 	 * Constants for class works.
@@ -89,6 +90,10 @@ class Field {
 		return $this;
 	}
 
+	/**
+	 * Get a list with possible field types.
+	 * @return array Return a list of types.
+	 */
 	public static function get_types() {
 		$data[] = self::TYPE_TEXT;
 		$data[] = self::TYPE_EMAIL;
@@ -99,6 +104,7 @@ class Field {
 		$data[] = self::TYPE_SELECT;
 		$data[] = self::TYPE_FILE;
 		$data[] = self::TYPE_SUBMIT;
+		$data[] = self::TYPE_PASSWORD;
 		return $data;
 	}
 
@@ -125,17 +131,43 @@ class Field {
 	}
 
 	/**
-	 * Call the attributes and set the values.
+	 * Call the attributes and define the action routes.
 	 * @param string $name Attribute name.
 	 * @param array $arguments Values for attribute.
 	 * @return Object returns the object.
 	 */
 	public function __call($name, $arguments) {
-		$name = explode('_', $name);
-		$method = $name[0];
-		if($method != self::PREFIX_CALL)
-			exit(__CLASS__ . ' said: Erm, this method needs a "' . self::PREFIX_CALL . '" before attribute, "' . self::PREFIX_CALL . '_id", "' . self::PREFIX_CALL . '_name", etc... okay? :)');
-		unset($name[0]);
+		$attr = $this->get_attr_called($name);
+		$this->validate_attr($attr, $arguments);
+		$this->populate_attr($attr, $arguments);
+		return $this;
+	}
+
+	/**
+	 * Get a attribute name from a external method called.
+	 * @param string $method Method called.
+	 * @return string Returns a attribute name.
+	 */
+	private function get_attr_called($method)
+	{
+		$method = explode('_', $method);
+		$prefix = $method[0];
+		if($prefix != self::PREFIX_CALL)
+			exit(__CLASS__ . ' said: Erm, this method needs a prefix "' . self::PREFIX_CALL . '" before attribute, "' . self::PREFIX_CALL . '_id", "' . self::PREFIX_CALL . '_name", etc... okay? :)');
+		unset($method[0]);
+		return implode('_', $method);
+	}
+
+	/**
+	 * Validate a attribute.
+	 * @param string $attr Attribute name.
+	 * @param string $data Attribute data to validation.
+	 * @return void
+	 */
+	private function validate_attr($attr, $data)
+	{
+		if(!property_exists(__CLASS__, $attr))
+			exit(__CLASS__ . ' said: No way! wrong attribute: "' . $attr . '".');
 		switch($this->type) {
 			case self::TYPE_TEXT:
 			case self::TYPE_TEXTAREA:
@@ -144,55 +176,73 @@ class Field {
 			case self::TYPE_CHECKBOX:
 			case self::TYPE_FILE:
 			case self::TYPE_SUBMIT:
-				$name = implode('_', $name);
-				if(!property_exists(__CLASS__, $name))
-					exit(__CLASS__ . ' said: No way! wrong attribute: "' . $name . '".');	
-				if(count($arguments) > 1 && !in_array($name, self::get_multiple_attr()))
-					exit(__CLASS__ . ' said: Hey! "' . $name . '" receives only one param.');
-				$this->$name = in_array($name, self::get_multiple_attr()) ? array_merge($this->$name, $arguments) : $arguments[0];
+			case self::TYPE_PASSWORD:
+				if(count($data) > 1 && !in_array($attr, self::get_multiple_attr()))
+					exit(__CLASS__ . ' said: Hey! "' . $attr . '" receives only one param.');
 			break;
 			case self::TYPE_HIDDEN:
-				$name = implode('_', $name);
-				if(!property_exists(__CLASS__, $name))
-					exit(__CLASS__ . ' said: No way! wrong attribute: "' . $name . '".');
-				if(count($arguments) > 1)
-					exit(__CLASS__ . ' said: Hey! "' . $name . '" receives only one param.');
-				$this->$name =  $arguments[0];
+				if(count($data) > 1)
+					exit(__CLASS__ . ' said: Hey! "' . $attr . '" receives only one param.');
 			break;
 			case self::TYPE_SELECT:
-				$name = implode('_', $name);
-				if(!property_exists(__CLASS__, $name))
-					exit(__CLASS__ . ' said: No way! wrong attribute: "' . $name . '".');
+			break;
+			default:
+				exit(__CLASS__ . ' said: Houston, Rasmus, Mom!!! I have a problem, I don\'t know what it\'s "' . $this->type . '" :(');
+			break;
+		}
+	}
+
+	/**
+	 * Populates the attribute.
+	 * @return void
+	 */
+	private function populate_attr($attr, $data)
+	{
+		switch($this->type) {
+			case self::TYPE_TEXT:
+			case self::TYPE_TEXTAREA:
+			case self::TYPE_EMAIL:
+			case self::TYPE_RADIO:
+			case self::TYPE_CHECKBOX:
+			case self::TYPE_FILE:
+			case self::TYPE_SUBMIT:
+			case self::TYPE_PASSWORD:
+				$this->$attr = in_array($attr, self::get_multiple_attr()) ? array_merge($this->$attr, $data) : $data[0];
+			break;
+			case self::TYPE_HIDDEN:
+				$this->$attr =  $data[0];
+			break;
+			case self::TYPE_SELECT:
 				$group = null;
-				switch($name) {
+				switch($attr) {
 					case 'multiple_option':
-						$group = $arguments[0];
-						unset($arguments[0]);
-						$arguments = array_values($arguments);
+						$group = $data[0];
+						unset($data[0]);
+						$data = array_values($data);
 					case 'option':
-						switch(count($arguments)) {
+						switch(count($data)) {
 							case 1:
-								$option['name'] = $arguments[0];
-								$option['value'] = $arguments[0];
+								$option['name'] = $data[0];
+								$option['value'] = $data[0];
 								$option['selected'] = false;
 							break;
 							case 2:
-								$option['name'] = $arguments[0];
-								if(is_bool($arguments[1]))
+								$option['name'] = $data[0];
+								if(is_bool($data[1]))
 								{
-									$option['value'] = $arguments[0];
-									$option['selected'] = $arguments[1];
+									$option['value'] = $data[0];
+									$option['selected'] = $data[1];
 								}
 								else
 								{
-									$option['value'] = $arguments[1];
+									$option['value'] = $data[1];
 									$option['selected'] = false;
 								}
 							break;
 							case 3:
-								$option['name'] = $arguments[0];
-								$option['value'] = $arguments[1];
-								$option['selected'] = $arguments[2];
+								$option['name'] = $data[0];
+								$option['value'] = $data[1];
+								$option['selected'] = $data[2];
 							break;
 							default:
 								exit(__CLASS__ . ' said: something is wrong here :(');
@@ -204,9 +254,9 @@ class Field {
 							$this->option[] = $option;
 					break;
 					default:
-						if(count($arguments) > 1 && !in_array($name, self::get_multiple_attr()))
-							exit(__CLASS__ . ' said: Hey! "' . $name . '" receives only one param.');
-						$this->$name = in_array($name, self::get_multiple_attr()) ? array_merge($this->$name, $arguments) : $arguments[0];
+						if(count($data) > 1 && !in_array($attr, self::get_multiple_attr()))
+							exit(__CLASS__ . ' said: Hey! "' . $attr . '" receives only one param.');
+						$this->$attr = in_array($attr, self::get_multiple_attr()) ? array_merge($this->$attr, $data) : $data[0];
 					break;
 				}
 			break;
@@ -214,7 +264,6 @@ class Field {
 				exit(__CLASS__ . ' said: Houston, Rasmus, Mom!!! I have a problem, I don\'t know what it\'s "' . $this->type . '" :(');
 			break;
 		}
-		return $this;
 	}
 
 	/**
@@ -259,19 +308,7 @@ class Field {
 	 */
 	private function get_standard() {
 		$html = '';
-		$label = array();
-		if($this->label_text && $this->type != self::TYPE_SUBMIT) {
-			if($this->id)
-				$label[] = 'for="' . $this->id . '"';
-			if($this->label_id)
-				$label[] = 'id="' . $this->label_id . '"';
-			if(count($this->label_class) > 0)
-				$label[] = 'class="' . implode(' ', $this->label_class) . '"';
-			if($this->title)
-				$label[] = 'title="' . $this->title . '"';
-			$html .= '<label' . (count($label) > 0 ? ' ' . implode(' ', $label) : '') . '>' . $this->label_text . ':' . ($this->required ? '*' : '') . '</label>' . (self::BREAK_LINE ? "\n" : '');
-		}
-
+		$html .= $this->get_html_label();
 		$input[] = 'type="' . $this->type . '"';
 		$input[] = 'name="' . $this->name . '"';
 		if($this->id)
@@ -288,68 +325,6 @@ class Field {
 			$input[] = 'required';
 		$input = array_merge($input, $this->get_html_multiple_attr());
 		$html .= '<input ' . implode(' ', $input) . ' />';
-		return $html;
-	}
-
-	/**
-	 * Generates a html with input type text.
-	 * @return string Return a html generated.
-	 */
-	private function get_text() {
-		return $this->get_standard();
-	}
-
-	/**
-	 * Generates a html with input type email.
-	 * @return string Return a html generated.
-	 */
-	private function get_email() {
-		return $this->get_standard();
-	}
-
-	/**
-	 * Generates a html with input type file.
-	 * @return string Return a html generated.
-	 */
-	private function get_file() {
-		return $this->get_standard();
-	}
-
-	/**
-	 * Generates a html with input type submit.
-	 * @return string Return a html generated.
-	 */
-	private function get_submit() {
-		return $this->get_standard();
-	}
-
-	/**
-	 * Generates a html with textarea.
-	 * @return string Return a html generated.
-	 */
-	private function get_textarea() {
-		$html = '';
-		if($this->label_text) {
-			if($this->id)
-				$label[] = 'for="' . $this->id . '"';
-			if($this->label_id)
-				$label[] = 'id="' . $this->label_id . '"';
-			if(count($this->label_class) > 0)
-				$label[] = 'class="' . implode(' ', $this->label_class) . '"';
-			if($this->title)
-				$label[] = 'title="' . $this->title . '"';
-			$html .= '<label ' . implode(' ', $label) . '>' . $this->label_text . ':' . ($this->required ? '*' : '') . '</label>' . (self::BREAK_LINE ? "\n" : '');
-		}
-
-		$input[] = 'name="' . $this->name . '"';
-		if($this->id)
-			$input[] = 'id="' . $this->id . '"';
-		if(count($this->class) > 0)
-			$input[] = 'class="' . implode(' ', $this->class) . '"';
-		if($this->title)
-			$input[] = 'title="' . $this->title . '"';
-		$input = array_merge($input, $this->get_html_multiple_attr());
-		$html .= '<textarea ' . implode(' ', $input) . ' >' . ($this->value ? $this->value : '') . '</textarea>';
 		return $html;
 	}
 
@@ -383,6 +358,85 @@ class Field {
 	}
 
 	/**
+	 * Generates a <label> HTML.
+	 * @return string Return a html generated.
+	 */
+	private function get_html_label() {
+		if(!$this->label_text && in_array($this->type, array(self::TYPE_SUBMIT, self::TYPE_HIDDEN)))
+			return '';
+		$label = array();
+		if($this->id)
+			$label[] = 'for="' . $this->id . '"';
+		if($this->label_id)
+			$label[] = 'id="' . $this->label_id . '"';
+		if(count($this->label_class) > 0)
+			$label[] = 'class="' . implode(' ', $this->label_class) . '"';
+		if($this->title)
+			$label[] = 'title="' . $this->title . '"';
+		$t = (!in_array($this->type, array(self::TYPE_CHECKBOX, self::TYPE_RADIO)) ? ':' : '');
+		return '<label' . (count($label) > 0 ? ' ' . implode(' ', $label) : '') . '>' . $this->label_text . $t . ($this->required ? '*' : '') . '</label>' . (self::BREAK_LINE ? "\n" : '');
+	}
+
+	/**
+	 * Generates a html with input type text.
+	 * @return string Return a html generated.
+	 */
+	private function get_text() {
+		return $this->get_standard();
+	}
+
+	/**
+	 * Generates a html with input type email.
+	 * @return string Return a html generated.
+	 */
+	private function get_email() {
+		return $this->get_standard();
+	}
+
+	/**
+	 * Generates a html with input type password.
+	 * @return string Return a html generated.
+	 */
+	private function get_password() {
+		return $this->get_standard();
+	}
+
+	/**
+	 * Generates a html with input type file.
+	 * @return string Return a html generated.
+	 */
+	private function get_file() {
+		return $this->get_standard();
+	}
+
+	/**
+	 * Generates a html with input type submit.
+	 * @return string Return a html generated.
+	 */
+	private function get_submit() {
+		return $this->get_standard();
+	}
+
+	/**
+	 * Generates a html with textarea.
+	 * @return string Return a html generated.
+	 */
+	private function get_textarea() {
+		$html = '';
+		$html .= $this->get_html_label();
+		$input[] = 'name="' . $this->name . '"';
+		if($this->id)
+			$input[] = 'id="' . $this->id . '"';
+		if(count($this->class) > 0)
+			$input[] = 'class="' . implode(' ', $this->class) . '"';
+		if($this->title)
+			$input[] = 'title="' . $this->title . '"';
+		$input = array_merge($input, $this->get_html_multiple_attr());
+		$html .= '<textarea ' . implode(' ', $input) . ' >' . ($this->value ? $this->value : '') . '</textarea>';
+		return $html;
+	}
+
+	/**
 	 * Generates a html with input type hidden.
 	 * @return string Return a html generated.
 	 */
@@ -405,7 +459,6 @@ class Field {
 	 */
 	private function get_checkbox() {
 		$html = '';
-
 		$input[] = 'type="' . $this->type . '"';
 		$input[] = 'name="' . $this->name . '"';
 		if($this->id)
@@ -420,18 +473,7 @@ class Field {
 			$input[] = 'checked="checked"';
 		$input = array_merge($input, $this->get_html_multiple_attr());
 		$html .= '<input ' . implode(' ', $input) . ' />' . (self::BREAK_LINE ? "\n" : '');
-
-		if($this->label_text) {
-			if($this->id)
-				$label[] = 'for="' . $this->id . '"';
-			if($this->label_id)
-				$label[] = 'id="' . $this->label_id . '"';
-			if(count($this->label_class) > 0)
-				$label[] = 'class="' . implode(' ', $this->label_class) . '"';
-			if($this->title)
-				$label[] = 'title="' . $this->title . '"';
-			$html .= '<label ' . implode(' ', $label) . '>' . $this->label_text . ($this->required ? '*' : '') . '</label>';
-		}
+		$html .= $this->get_html_label();
 		return $html;
 	}
 
@@ -449,18 +491,7 @@ class Field {
 	 */
 	private function get_select() {
 		$html = '';
-		if($this->label_text) {
-			if($this->id)
-				$label[] = 'for="' . $this->id . '"';
-			if($this->label_id)
-				$label[] = 'id="' . $this->label_id . '"';
-			if(count($this->label_class) > 0)
-				$label[] = 'class="' . implode(' ', $this->label_class) . '"';
-			if($this->title)
-				$label[] = 'title="' . $this->title . '"';
-			$html .= '<label ' . implode(' ', $label) . '>' . $this->label_text . ':' . ($this->required ? '*' : '') . '</label>' . (self::BREAK_LINE ? "\n" : '');
-		}
-
+		$html .= $this->get_html_label();
 		$select[] = 'name="' . $this->name . '"';
 		if($this->id)
 			$select[] = 'id="' . $this->id . '"';
@@ -471,10 +502,8 @@ class Field {
 		if($this->multiple)
 			$select[] = 'multiple="multiple"';
 		$select = array_merge($select, $this->get_html_multiple_attr());
-
 		$options = array();
 		$multiple_options = array();
-
 		if(count($this->multiple_option) > 0)
 		{
 			$groups = array_keys($this->multiple_option);
