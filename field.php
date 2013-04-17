@@ -223,7 +223,7 @@ class Field {
 	 */
 	public function get() {
 		if($this->required)
-			$this->input_class[] = 'required';
+			$this->class[] = 'required';
 		return $this->{'get_' . $this->type}();
 	}
 
@@ -283,6 +283,8 @@ class Field {
 			$input[] = 'title="' . $this->title . '"';
 		if($this->multiple && $this->type === self::TYPE_FILE)
 			$input[] = 'multiple="multiple"';
+		if($this->required)
+			$input[] = 'required';
 		$input = array_merge($input, $this->get_html_multiple_attr());
 		$html .= '<input ' . implode(' ', $input) . ' />';
 		return $html;
@@ -491,8 +493,10 @@ class Field {
 			}
 		}	
 		$html .= '<select ' . implode(' ', $select) . '>' . (self::BREAK_LINE ? "\n" : '');
-		$html .= implode((self::BREAK_LINE ? "\n" : ''), $multiple_options) . (self::BREAK_LINE ? "\n" : '');
-		$html .= implode((self::BREAK_LINE ? "\n" : ''), $options) . (self::BREAK_LINE ? "\n" : '');
+		if(count($multiple_options) > 0)
+			$html .= implode((self::BREAK_LINE ? "\n" : ''), $multiple_options) . (self::BREAK_LINE ? "\n" : '');
+		if(count($options) > 0)
+			$html .= implode((self::BREAK_LINE ? "\n" : ''), $options) . (self::BREAK_LINE ? "\n" : '');
 		$html .= '</select>';
 		return $html;
 	}
