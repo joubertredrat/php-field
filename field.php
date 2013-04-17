@@ -447,6 +447,8 @@ class Field {
 			$input[] = 'class="' . implode(' ', $this->class) . '"';
 		if($this->title)
 			$input[] = 'title="' . $this->title . '"';
+		if($this->required)
+			$input[] = 'required';
 		$input = array_merge($input, $this->get_html_multiple_attr());
 		$html .= '<textarea ' . implode(' ', $input) . ' >' . ($this->value ? $this->value : '') . '</textarea>';
 		return $html;
