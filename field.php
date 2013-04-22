@@ -29,6 +29,7 @@ class Field {
 	private $title;
 	private $required;
 	private $multiple;
+	private $maxlength;
 
 	/**
 	 * Select values.
@@ -327,6 +328,8 @@ class Field {
 			$input[] = 'value="' . $this->value . '"';
 		if($this->title)
 			$input[] = 'title="' . $this->title . '"';
+		if($this->maxlength && is_int($this->maxlength))
+			$input[] = 'maxlength="' . $this->maxlength . '"';
 		if($this->multiple && $this->type === self::TYPE_FILE)
 			$input[] = 'multiple="multiple"';
 		if($this->required)
