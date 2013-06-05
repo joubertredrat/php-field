@@ -30,6 +30,7 @@ class Field {
 	private $required;
 	private $multiple;
 	private $maxlength;
+	private $disabled;
 
 	/**
 	 * Select values.
@@ -151,7 +152,7 @@ class Field {
 	 */
 	public static function get_named_attr() {
 		return array('data');
-	}	
+	}
 
 	/**
 	 * Call the attributes and define the action routes.
@@ -339,8 +340,8 @@ class Field {
 	 * @return void
 	 */
 	public function dump() {
-		ob_start(); 
-		var_dump($this); 
+		ob_start();
+		var_dump($this);
 		echo highlight_string("<?php\n " . ob_get_clean() . "?>", true);
 	}
 
@@ -348,6 +349,7 @@ class Field {
 	 * Generates a general html for most inputs.
 	 *
 	 * @return string Return a html generated.
+	 * @fixme Don't use button and input here, use on respectly get functions.
 	 */
 	private function get_standard() {
 		$html = '';
@@ -358,7 +360,7 @@ class Field {
 			$input[] = 'id="' . $this->id . '"';
 		if(count($this->class) > 0)
 			$input[] = 'class="' . implode(' ', $this->class) . '"';
-		if($this->value)
+		if($this->value && $this->type !== self::TYPE_BUTTON)
 			$input[] = 'value="' . $this->value . '"';
 		if($this->title)
 			$input[] = 'title="' . $this->title . '"';
@@ -368,9 +370,14 @@ class Field {
 			$input[] = 'multiple="multiple"';
 		if($this->required)
 			$input[] = 'required';
+		if($this->disabled)
+			$input[] = 'disabled="disabled"';
 		$input = array_merge($input, $this->get_html_multiple_attr());
 		$input = array_merge($input, $this->get_html_named_attr());
-		$html .= '<input ' . implode(' ', $input) . ' />';
+		if($this->type === self::TYPE_BUTTON)
+			$html .= '<button ' . implode(' ', $input) . '>' . ($this->value ? $this->value : '') . '</button>';
+		else
+			$html .= '<input ' . implode(' ', $input) . ' />';
 		return $html;
 	}
 
@@ -425,7 +432,7 @@ class Field {
 	 * @return string Return a html generated.
 	 */
 	private function get_html_label() {
-		if(!$this->label_text && in_array($this->type, array(self::TYPE_SUBMIT, self::TYPE_HIDDEN, self::TYPE_BUTTON)))
+		if(!$this->label_text || in_array($this->type, array(self::TYPE_SUBMIT, self::TYPE_HIDDEN, self::TYPE_BUTTON)))
 			return '';
 		$label = array();
 		if($this->id)
@@ -605,7 +612,7 @@ class Field {
 			foreach ($this->option as $data) {
 				$options[] = '<option value="' . $data['value'] . '"' . (is_bool($data['selected']) && $data['selected'] == true ? ' selected="selected"' : '' ) . '>' . $data['name'] . '</option>';
 			}
-		}	
+		}
 		$html .= '<select ' . implode(' ', $select) . '>' . (self::BREAK_LINE ? "\n" : '');
 		if(count($multiple_options) > 0)
 			$html .= implode((self::BREAK_LINE ? "\n" : ''), $multiple_options) . (self::BREAK_LINE ? "\n" : '');
