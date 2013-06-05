@@ -50,6 +50,11 @@ class Field {
 	private $checked;
 
 	/**
+	 * HTML5 data attribute.
+	 */
+	private $data;
+
+	/**
 	 * Label attributes and data.
 	 */
 	private $label_class;
@@ -79,6 +84,7 @@ class Field {
 
 	/**
 	 * Creates a new instance of input field with a name.
+	 *
 	 * @param string $name Name of field.
 	 * @param string $type Field type.
 	 * @return Object returns the object.
@@ -89,11 +95,14 @@ class Field {
 		$this->required = false;
 		foreach(self::get_multiple_attr() as $attr_name)
 			$this->$attr_name = array();
+		foreach(self::get_named_attr() as $attr_name)
+			$this->$attr_name = array();
 		return $this;
 	}
 
 	/**
 	 * Get a list with possible field types.
+	 *
 	 * @return array Return a list of types.
 	 */
 	public static function get_types() {
@@ -113,6 +122,7 @@ class Field {
 
 	/**
 	 * Call a new instance of field.
+	 *
 	 * @param string $name Name of field.
 	 * @param string $type Field type.
 	 * @return Object returns a created object.
@@ -127,6 +137,7 @@ class Field {
 
 	/**
 	 * Return a attributes with multiple data.
+	 *
 	 * @return array Return array with attributes.
 	 */
 	public static function get_multiple_attr() {
@@ -134,7 +145,17 @@ class Field {
 	}
 
 	/**
+	 * Return a named attributes.
+	 *
+	 * @return array Return array with attributes.
+	 */
+	public static function get_named_attr() {
+		return array('data');
+	}	
+
+	/**
 	 * Call the attributes and define the action routes.
+	 *
 	 * @param string $name Attribute name.
 	 * @param array $arguments Values for attribute.
 	 * @return Object returns the object.
@@ -148,6 +169,7 @@ class Field {
 
 	/**
 	 * Get a attribute name from a external method called.
+	 *
 	 * @param string $method Method called.
 	 * @return string Returns a attribute name.
 	 */
@@ -163,6 +185,7 @@ class Field {
 
 	/**
 	 * Validate a attribute.
+	 *
 	 * @param string $attr Attribute name.
 	 * @param string $data Attribute data to validation.
 	 * @return void
@@ -181,7 +204,9 @@ class Field {
 			case self::TYPE_SUBMIT:
 			case self::TYPE_PASSWORD:
 			case self::TYPE_BUTTON:
-				if(count($data) > 1 && !in_array($attr, self::get_multiple_attr()))
+				if(count($data) != 2 && in_array($attr, self::get_named_attr()))
+					exit(__CLASS__ . ' said: Hey! "' . $attr . '" receives only two params.');
+				if(count($data) > 1 && !in_array($attr, self::get_multiple_attr()) && !in_array($attr, self::get_named_attr()))
 					exit(__CLASS__ . ' said: Hey! "' . $attr . '" receives only one param.');
 			break;
 			case self::TYPE_HIDDEN:
@@ -198,6 +223,7 @@ class Field {
 
 	/**
 	 * Populates the attribute.
+	 *
 	 * @return void
 	 */
 	private function populate_attr($attr, $data)
@@ -212,10 +238,13 @@ class Field {
 			case self::TYPE_SUBMIT:
 			case self::TYPE_PASSWORD:
 			case self::TYPE_BUTTON:
-				$this->$attr = in_array($attr, self::get_multiple_attr()) ? array_merge($this->$attr, $data) : $data[0];
+				if(in_array($attr, self::get_named_attr()))
+					$this->{$attr}[$data[0]] = $data[1];
+				else
+					$this->$attr = in_array($attr, self::get_multiple_attr()) ? array_merge($this->$attr, $data) : $data[0];
 			break;
 			case self::TYPE_HIDDEN:
-				$this->$attr =  $data[0];
+				$this->$attr = $data[0];
 			break;
 			case self::TYPE_SELECT:
 				$group = null;
@@ -254,9 +283,9 @@ class Field {
 							break;
 						}
 						if(!is_null($group))
-							$this->multiple_option[$group][] = $option;
+							$this->{$attr}[$group][] = $option;
 						else
-							$this->option[] = $option;
+							$this->{$attr}[] = $option;
 					break;
 					default:
 						if(count($data) > 1 && !in_array($attr, self::get_multiple_attr()))
@@ -273,6 +302,7 @@ class Field {
 
 	/**
 	 * Generates a html from data on object.
+	 *
 	 * @return string Return a html generated.
 	 */
 	public function get() {
@@ -283,6 +313,7 @@ class Field {
 
 	/**
 	 * Get a object.
+	 *
 	 * @return Object returns the object.
 	 */
 	public function get_object() {
@@ -291,6 +322,7 @@ class Field {
 
 	/**
 	 * Gets a HTML generated and print on screen.
+	 *
 	 * @return void
 	 */
 	public function render($spam = false) {
@@ -303,6 +335,7 @@ class Field {
 
 	/**
 	 * Dump the object and print on screen.
+	 *
 	 * @return void
 	 */
 	public function dump() {
@@ -313,6 +346,7 @@ class Field {
 
 	/**
 	 * Generates a general html for most inputs.
+	 *
 	 * @return string Return a html generated.
 	 */
 	private function get_standard() {
@@ -335,12 +369,14 @@ class Field {
 		if($this->required)
 			$input[] = 'required';
 		$input = array_merge($input, $this->get_html_multiple_attr());
+		$input = array_merge($input, $this->get_html_named_attr());
 		$html .= '<input ' . implode(' ', $input) . ' />';
 		return $html;
 	}
 
 	/**
 	 * Generates a html for field with multiple value attributes.
+	 *
 	 * @return string Return a html generated.
 	 */
 	private function get_html_multiple_attr() {
@@ -369,7 +405,23 @@ class Field {
 	}
 
 	/**
+	 * Generates a html for field with named attributes.
+	 *
+	 * @return string Return a html generated.
+	 */
+	private function get_html_named_attr() {
+		$attr = array();
+		if($this->data) {
+			foreach ($this->data as $name => $value) {
+				$attr[] = 'data-' . $name . '="' . $value . '"';
+			}
+		}
+		return $attr;
+	}
+
+	/**
 	 * Generates a <label> HTML.
+	 *
 	 * @return string Return a html generated.
 	 */
 	private function get_html_label() {
@@ -390,6 +442,7 @@ class Field {
 
 	/**
 	 * Generates a html with input type text.
+	 *
 	 * @return string Return a html generated.
 	 */
 	private function get_text() {
@@ -398,6 +451,7 @@ class Field {
 
 	/**
 	 * Generates a html with input type email.
+	 *
 	 * @return string Return a html generated.
 	 */
 	private function get_email() {
@@ -406,6 +460,7 @@ class Field {
 
 	/**
 	 * Generates a html with input type password.
+	 *
 	 * @return string Return a html generated.
 	 */
 	private function get_password() {
@@ -414,6 +469,7 @@ class Field {
 
 	/**
 	 * Generates a html with input type file.
+	 *
 	 * @return string Return a html generated.
 	 */
 	private function get_file() {
@@ -422,6 +478,7 @@ class Field {
 
 	/**
 	 * Generates a html with input type submit.
+	 *
 	 * @return string Return a html generated.
 	 */
 	private function get_submit() {
@@ -429,7 +486,8 @@ class Field {
 	}
 
 	/**
-	 * Generates a html with input type submit.
+	 * Generates a html with input type button.
+	 *
 	 * @return string Return a html generated.
 	 */
 	private function get_button() {
@@ -438,6 +496,7 @@ class Field {
 
 	/**
 	 * Generates a html with textarea.
+	 *
 	 * @return string Return a html generated.
 	 */
 	private function get_textarea() {
@@ -459,6 +518,7 @@ class Field {
 
 	/**
 	 * Generates a html with input type hidden.
+	 *
 	 * @return string Return a html generated.
 	 */
 	private function get_hidden() {
@@ -476,6 +536,7 @@ class Field {
 
 	/**
 	 * Generates a html with input type checkbox.
+	 *
 	 * @return string Return a html generated.
 	 */
 	private function get_checkbox() {
@@ -500,6 +561,7 @@ class Field {
 
 	/**
 	 * Generates a html with input type radio.
+	 *
 	 * @return string Return a html generated.
 	 */
 	private function get_radio() {
@@ -508,6 +570,7 @@ class Field {
 
 	/**
 	 * Generates a html with select field.
+	 *
 	 * @return string Return a html generated.
 	 */
 	private function get_select() {
