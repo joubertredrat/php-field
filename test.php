@@ -5,6 +5,16 @@
 
 require(__DIR__ . '/field.php');
 
+	$attr['label_text'] = 'Escolha o pato';
+	$attr['id'] = 'veio';
+	$attr['title'] = 'Eu vi';
+	$attr['class'] = array('class1', 'class2');
+	$attr['style'] = 'background-color: #FFCCCC';
+	$attr['style'] = 'color: #FF00FF';
+
+
+	Field::newer('go', Field::TYPE_TEXT)->set_attributes($attr)->render();
+
 	// Simple usage
 	Field::newer('lol', Field::TYPE_TEXT)->set_label_text('is lol?')->render();
 

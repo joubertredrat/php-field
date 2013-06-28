@@ -155,6 +155,32 @@ class Field {
 	}
 
 	/**
+	 * 
+	 */
+	public function set_attributes(Array $data) {
+		if($data) {
+			foreach($data as $attr => $args) {
+				$set = self::PREFIX_CALL . '_' . $attr;
+				if(in_array($attr, self::get_multiple_attr())) {
+					if(is_array($args)) {
+						if(count($args) > 1) {
+							foreach ($args as $value) {
+								$this->{$set}($value);
+							}
+						} else
+							$this->{$set}($args[0]);
+					}
+					else
+						$this->{$set}($args);
+				}
+				else
+					$this->{$set}($args);
+			}
+		}
+		return $this;
+	}
+
+	/**
 	 * Call the attributes and define the action routes.
 	 *
 	 * @param string $name Attribute name.
@@ -263,13 +289,10 @@ class Field {
 							break;
 							case 2:
 								$option['name'] = $data[0];
-								if(is_bool($data[1]))
-								{
+								if(is_bool($data[1])) {
 									$option['value'] = $data[0];
 									$option['selected'] = $data[1];
-								}
-								else
-								{
+								} else {
 									$option['value'] = $data[1];
 									$option['selected'] = false;
 								}
