@@ -616,6 +616,8 @@ class Field {
 		if($this->multiple)
 			$select[] = 'multiple="multiple"';
 		$select = array_merge($select, $this->get_html_multiple_attr());
+		if($this->required)
+			$select[] = 'required';
 		$options = array();
 		$multiple_options = array();
 		if(count($this->multiple_option) > 0)
@@ -624,7 +626,7 @@ class Field {
 			foreach($groups as $group) {
 				$list_options = array();
 				foreach ($this->multiple_option[$group] as $data) {
-					$list_options[] = '<option value="' . $data['value'] . '"' . (is_bool($data['selected']) && $data['selected'] == true ? ' selected="selected"' : '' ) . '>' . $data['name'] . '</option>';
+					$list_options[] = '<option' . (is_null($data['value']) ? '' : ' value="' . $data['value'] . '" ') . (is_bool($data['selected']) && $data['selected'] == true ? ' selected="selected"' : '' ) . '>' . $data['name'] . '</option>';
 				}
 				$multiple_options[] = '<optgroup label="' . $group . '">' . (self::BREAK_LINE ? "\n" : '') . implode((self::BREAK_LINE ? "\n" : ''), $list_options) . (self::BREAK_LINE ? "\n" : '') . '</optgroup>';
 			}
@@ -633,7 +635,7 @@ class Field {
 		if(count($this->option) > 0)
 		{
 			foreach ($this->option as $data) {
-				$options[] = '<option value="' . $data['value'] . '"' . (is_bool($data['selected']) && $data['selected'] == true ? ' selected="selected"' : '' ) . '>' . $data['name'] . '</option>';
+				$options[] = '<option' . (is_null($data['value']) ? '' : ' value="' . $data['value'] . '" ') . (is_bool($data['selected']) && $data['selected'] == true ? ' selected="selected"' : '' ) . '>' . $data['name'] . '</option>';
 			}
 		}
 		$html .= '<select ' . implode(' ', $select) . '>' . (self::BREAK_LINE ? "\n" : '');
