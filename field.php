@@ -311,6 +311,9 @@ class Field {
 						else
 							$this->{$attr}[] = $option;
 					break;
+                                        case 'data':
+                                            $this->{$attr}[$data[0]] = $data[1];
+                                        break;
 					default:
 						if(count($data) > 1 && !in_array($attr, self::get_multiple_attr()))
 							exit(__CLASS__ . ' said: Hey! "' . $attr . '" receives only one param.');
@@ -616,6 +619,7 @@ class Field {
 		if($this->multiple)
 			$select[] = 'multiple="multiple"';
 		$select = array_merge($select, $this->get_html_multiple_attr());
+		$select = array_merge($select, $this->get_html_named_attr());
 		if($this->required)
 			$select[] = 'required';
 		$options = array();
