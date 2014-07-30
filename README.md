@@ -1,4 +1,1 @@
-Field class for CodeIgniter and another apps.
-========
-
-On work.
+This project has been discontinued.
